@@ -23,7 +23,7 @@ const placeLabel = () => {
 
     <div class="card frost">
       <div class="hero">
-        <WeatherIcon class="icon" :name="current.weather.meteoconsName" />
+        <WeatherIcon class="icon" :name="current.weather.meteoconsName" animated />
         <span class="temp">{{ current.temperature }}°</span>
       </div>
 
