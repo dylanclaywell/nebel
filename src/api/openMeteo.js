@@ -33,6 +33,10 @@ const DAILY_FIELDS = [
   'precipitation_probability_max',
 ]
 
+// 15-minutely precipitation for the near-term nowcast. Backed by NOAA HRRR over
+// North America (radar/obs-informed, hourly updates); interpolated elsewhere.
+const MINUTELY_FIELDS = ['precipitation']
+
 /**
  * @typedef {Object} Units
  * @property {'celsius'|'fahrenheit'} [temperature]
@@ -103,6 +107,7 @@ export async function fetchForecast({ latitude, longitude, units = {} }) {
     latitude: String(latitude),
     longitude: String(longitude),
     current: CURRENT_FIELDS.join(','),
+    minutely_15: MINUTELY_FIELDS.join(','),
     hourly: HOURLY_FIELDS.join(','),
     daily: DAILY_FIELDS.join(','),
     temperature_unit: u.temperature,
@@ -110,6 +115,7 @@ export async function fetchForecast({ latitude, longitude, units = {} }) {
     precipitation_unit: u.precipitation,
     timezone: 'auto',
     forecast_days: '7',
+    forecast_minutely_15: '8', // next 2 hours
   })
 
   return getJson(`${FORECAST_URL}?${params}`)

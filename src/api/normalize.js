@@ -51,6 +51,14 @@ export function normalizeForecast(raw, place = null) {
     time: cur.time,
   }
 
+  // 15-minutely precipitation for the near-term nowcast (may be absent).
+  const minutely = raw.minutely_15
+    ? raw.minutely_15.time.map((time, i) => ({
+        time,
+        precipitation: raw.minutely_15.precipitation[i] ?? 0,
+      }))
+    : []
+
   const daily = raw.daily.time.map((date, i) => ({
     date,
     weather: describeWeather(raw.daily.weather_code[i], true),
@@ -66,6 +74,7 @@ export function normalizeForecast(raw, place = null) {
     current,
     daily,
     hourly,
+    minutely,
     timezone: raw.timezone,
     fetchedAt: current.time,
   }

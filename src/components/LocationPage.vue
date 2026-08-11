@@ -4,6 +4,7 @@ import WeatherScene from './WeatherScene.vue'
 import Icon from './Icon.vue'
 import AlertBanner from './AlertBanner.vue'
 import CurrentConditions from './CurrentConditions.vue'
+import PrecipNowcast from './PrecipNowcast.vue'
 import HourlyForecast from './HourlyForecast.vue'
 import DailyForecast from './DailyForecast.vue'
 import { useForecast } from '../composables/useForecast.js'
@@ -94,6 +95,7 @@ onMounted(refresh)
         :place="location.type === 'current' ? null : forecast.place"
         :subtitle="location.type === 'current' ? locality : ''"
       />
+      <PrecipNowcast v-if="forecast.minutely.length" :minutely="forecast.minutely" />
       <HourlyForecast :hourly="forecast.hourly" :now="forecast.current.time" />
       <DailyForecast :daily="forecast.daily" />
 
