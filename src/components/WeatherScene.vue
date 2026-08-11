@@ -59,7 +59,8 @@ const sceneStyle = computed(() => ({
   z-index: 1;
   max-width: 640px;
   margin: 0 auto;
-  padding: 24px 16px 40px;
+  /* Top clears the fixed topbar (title / dots / add button) that floats above. */
+  padding: 64px 16px 40px;
   display: flex;
   flex-direction: column;
   gap: 20px;
