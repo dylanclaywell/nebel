@@ -1,0 +1,52 @@
+:root {
+  /* Palette — dark first (Nebel = fog/mist, cool blues) */
+  --bg: #0b1020;
+  --bg-elevated: #151b2e;
+  --surface: rgba(255, 255, 255, 0.06);
+  --surface-strong: rgba(255, 255, 255, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+  --text: #eef1f8;
+  --text-muted: #9aa3bd;
+  --accent: #6ea8fe;
+
+  --radius: 18px;
+  --gap: 16px;
+
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Respect iOS safe areas when installed as a PWA */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+#app {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--gap);
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
