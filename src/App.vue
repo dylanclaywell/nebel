@@ -114,7 +114,14 @@ function handleRemove(id) {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: calc(env(safe-area-inset-top) + 12px) 18px 12px;
+  padding: calc(env(safe-area-inset-top) + 11px) 18px 11px;
+  /* Frosted nav bar — blurs the content scrolling beneath it. */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(18px) saturate(1.1);
+  -webkit-backdrop-filter: blur(18px) saturate(1.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 1px 12px -8px rgba(0, 0, 0, 0.4);
+  /* Empty areas stay click-through so a swipe can start under the bar. */
   pointer-events: none;
 }
 
