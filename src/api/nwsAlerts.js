@@ -43,6 +43,9 @@ export async function fetchAlerts(latitude, longitude) {
       severity: p.severity,
       urgency: p.urgency,
       description: p.description,
+      instruction: p.instruction, // preparedness / "what to do" text
+      areaDesc: p.areaDesc,
+      senderName: p.senderName,
       expires: p.expires,
     }
   })

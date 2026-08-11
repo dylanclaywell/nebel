@@ -1,10 +1,21 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import Icon from './Icon.vue'
+import { parseSections, formatText, formatExpires } from '../utils/alertFormat.js'
 
-defineProps({
+const props = defineProps({
   alerts: { type: Array, required: true },
 })
+
+// Pre-parse each alert's NWS text into labeled sections + a "what to do" block.
+const views = computed(() =>
+  props.alerts.map((a) => ({
+    ...a,
+    sections: parseSections(a.description),
+    instructionBlocks: formatText(a.instruction),
+    expiresLabel: formatExpires(a.expires),
+  })),
+)
 
 // Which alert is expanded to show its full description.
 const openId = ref(null)
@@ -51,7 +62,7 @@ function onLeave(el, done) {
 
 <template>
   <div class="alerts">
-    <div v-for="a in alerts" :key="a.id" class="alert" :class="sevClass(a.severity)">
+    <div v-for="a in views" :key="a.id" class="alert" :class="sevClass(a.severity)">
       <button
         class="head"
         :aria-expanded="openId === a.id"
@@ -64,8 +75,34 @@ function onLeave(el, done) {
 
       <Transition :css="false" @enter="onEnter" @leave="onLeave">
         <div v-if="openId === a.id" class="body">
-          <p v-if="a.headline" class="headline">{{ a.headline }}</p>
-          <p class="desc">{{ a.description }}</p>
+          <div v-for="s in a.sections" :key="s.label" class="sec">
+            <span v-if="s.label" class="sec-label">{{ s.label }}</span>
+            <div class="sec-body">
+              <template v-for="(b, bi) in s.blocks" :key="bi">
+                <ul v-if="b.kind === 'ul'" class="bullets">
+                  <li v-for="(it, ii) in b.items" :key="ii">{{ it }}</li>
+                </ul>
+                <p v-else>{{ b.text }}</p>
+              </template>
+            </div>
+          </div>
+
+          <div v-if="a.instructionBlocks.length" class="sec instruction">
+            <span class="sec-label">What to do</span>
+            <div class="sec-body">
+              <template v-for="(b, bi) in a.instructionBlocks" :key="bi">
+                <ul v-if="b.kind === 'ul'" class="bullets">
+                  <li v-for="(it, ii) in b.items" :key="ii">{{ it }}</li>
+                </ul>
+                <p v-else>{{ b.text }}</p>
+              </template>
+            </div>
+          </div>
+
+          <p class="meta">
+            <span v-if="a.expiresLabel">Expires {{ a.expiresLabel }}</span>
+            <span v-if="a.senderName"> · {{ a.senderName }}</span>
+          </p>
         </div>
       </Transition>
     </div>
@@ -152,20 +189,71 @@ function onLeave(el, done) {
 }
 
 .body {
-  padding: 0 14px 14px;
+  padding: 2px 14px 14px;
   overflow: hidden;
 }
 
-.headline {
-  font-weight: 600;
-  font-size: 0.85rem;
-  margin-bottom: 8px;
+.sec {
+  padding: 9px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+}
+.sec:first-child {
+  border-top: none;
 }
 
-.desc {
-  font-size: 0.82rem;
+.sec-label {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+  margin-bottom: 4px;
+}
+
+.sec-body {
+  font-size: 0.84rem;
   line-height: 1.5;
-  color: rgba(255, 255, 255, 0.9);
-  white-space: pre-line;
+  color: rgba(255, 255, 255, 0.95);
+}
+.sec-body p + p {
+  margin-top: 6px;
+}
+
+.bullets {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.bullets li {
+  position: relative;
+  padding-left: 15px;
+}
+.bullets li::before {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0.6em;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* "What to do" gets a subtle inset panel to set it apart. */
+.instruction {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-top: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.meta {
+  margin-top: 12px;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.65);
 }
 </style>
