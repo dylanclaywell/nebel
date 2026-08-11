@@ -40,8 +40,8 @@ const placeLabel = () => {
           <dd>{{ current.humidity }}%</dd>
         </div>
         <div class="stat frost-chip">
-          <dt>Precip</dt>
-          <dd>{{ current.precipitation }} {{ current.units.precipitation }}</dd>
+          <dt>Rain</dt>
+          <dd>{{ current.precipProbability ?? 0 }}%</dd>
         </div>
       </dl>
     </div>

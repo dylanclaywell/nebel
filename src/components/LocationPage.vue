@@ -2,6 +2,7 @@
 import { onMounted, computed, ref } from 'vue'
 import WeatherScene from './WeatherScene.vue'
 import CurrentConditions from './CurrentConditions.vue'
+import HourlyForecast from './HourlyForecast.vue'
 import DailyForecast from './DailyForecast.vue'
 import { useForecast } from '../composables/useForecast.js'
 import { getCurrentPosition } from '../composables/useGeolocation.js'
@@ -77,6 +78,7 @@ onMounted(refresh)
         :place="location.type === 'current' ? null : forecast.place"
         :subtitle="location.type === 'current' ? locality : ''"
       />
+      <HourlyForecast :hourly="forecast.hourly" :now="forecast.current.time" />
       <DailyForecast :daily="forecast.daily" />
 
       <button v-if="isSaved" class="remove" @click="emit('remove', location.id)">

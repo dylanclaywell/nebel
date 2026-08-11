@@ -3,15 +3,35 @@
 
 import { describeWeather } from '../data/weatherCodes.js'
 
-/**
- * @param {object} raw   Response from fetchForecast().
- * @param {object} [place] Optional { name, admin1, country } for display.
- */
 export function normalizeForecast(raw, place = null) {
   const cur = raw.current
   const curUnits = raw.current_units
   const isDay = cur.is_day === 1
   const weather = describeWeather(cur.weather_code, isDay)
+
+  // Per-day sun times, so each hour can pick a day or night icon.
+  const sun = {}
+  raw.daily.time.forEach((date, i) => {
+    sun[date] = { sunrise: raw.daily.sunrise[i], sunset: raw.daily.sunset[i] }
+  })
+  const hourIsDay = (time) => {
+    const s = sun[time.slice(0, 10)]
+    if (!s) return true
+    return time >= s.sunrise && time < s.sunset
+  }
+
+  const hourly = raw.hourly.time.map((time, i) => ({
+    time,
+    temperature: Math.round(raw.hourly.temperature_2m[i]),
+    weather: describeWeather(raw.hourly.weather_code[i], hourIsDay(time)),
+    precipProbability: raw.hourly.precipitation_probability[i],
+  }))
+
+  // Open-Meteo's `current` block has no precip probability, so borrow it from
+  // the matching hour — that's the "chance of rain" users expect.
+  const curHour = cur.time.slice(0, 13)
+  const hIdx = raw.hourly.time.findIndex((t) => t.slice(0, 13) === curHour)
+  const precipProbability = hIdx >= 0 ? raw.hourly.precipitation_probability[hIdx] : null
 
   const current = {
     temperature: Math.round(cur.temperature_2m),
@@ -20,6 +40,7 @@ export function normalizeForecast(raw, place = null) {
     windSpeed: Math.round(cur.wind_speed_10m),
     windDirection: cur.wind_direction_10m,
     precipitation: cur.precipitation,
+    precipProbability,
     isDay,
     weather,
     units: {
@@ -38,13 +59,6 @@ export function normalizeForecast(raw, place = null) {
     precipProbability: raw.daily.precipitation_probability_max[i],
     sunrise: raw.daily.sunrise[i],
     sunset: raw.daily.sunset[i],
-  }))
-
-  const hourly = raw.hourly.time.map((time, i) => ({
-    time,
-    temperature: Math.round(raw.hourly.temperature_2m[i]),
-    weather: describeWeather(raw.hourly.weather_code[i], true),
-    precipProbability: raw.hourly.precipitation_probability[i],
   }))
 
   return {
