@@ -2,6 +2,9 @@
 const props = defineProps({
   current: { type: Object, required: true },
   place: { type: Object, default: null },
+  // Smaller line under the place name (e.g. resolved locality for the
+  // current-location page).
+  subtitle: { type: String, default: '' },
 })
 
 const placeLabel = () => {
@@ -14,6 +17,7 @@ const placeLabel = () => {
 <template>
   <section class="current">
     <p class="place">{{ placeLabel() }}</p>
+    <p v-if="subtitle" class="locality">{{ subtitle }}</p>
 
     <div class="hero">
       <span class="icon" aria-hidden="true">{{ current.weather.icon }}</span>
@@ -50,6 +54,12 @@ const placeLabel = () => {
   font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+
+.locality {
+  color: var(--scene-text-muted);
+  font-size: 0.85rem;
+  margin-top: 1px;
 }
 
 .hero {

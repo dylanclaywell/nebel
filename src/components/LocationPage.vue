@@ -1,10 +1,11 @@
 <script setup>
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import WeatherScene from './WeatherScene.vue'
 import CurrentConditions from './CurrentConditions.vue'
 import DailyForecast from './DailyForecast.vue'
 import { useForecast } from '../composables/useForecast.js'
 import { getCurrentPosition } from '../composables/useGeolocation.js'
+import { reverseGeocode } from '../api/reverseGeocode.js'
 import { PALETTE } from '../data/weatherCodes.js'
 
 const props = defineProps({
@@ -18,6 +19,9 @@ const NEUTRAL_SWATCH = PALETTE.cloudy.night
 
 const { forecast, loading, error, load } = useForecast()
 
+// Resolved place name for the current-location page (reverse-geocoded).
+const locality = ref('')
+
 const swatch = computed(
   () => forecast.value?.current.weather.swatch ?? NEUTRAL_SWATCH,
 )
@@ -29,6 +33,13 @@ async function refresh() {
     try {
       const { latitude, longitude } = await getCurrentPosition()
       await load({ latitude, longitude })
+      // Best-effort locality label; failure here shouldn't break the page.
+      try {
+        const place = await reverseGeocode(latitude, longitude)
+        locality.value = [place.name, place.admin1].filter(Boolean).join(', ')
+      } catch {
+        locality.value = ''
+      }
     } catch (err) {
       error.value = err.message ?? 'Could not get your location.'
       forecast.value = null
@@ -64,6 +75,7 @@ onMounted(refresh)
       <CurrentConditions
         :current="forecast.current"
         :place="location.type === 'current' ? null : forecast.place"
+        :subtitle="location.type === 'current' ? locality : ''"
       />
       <DailyForecast :daily="forecast.daily" />
 
