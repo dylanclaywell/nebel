@@ -12,6 +12,17 @@
   --radius: 18px;
   --gap: 16px;
 
+  /* Halo Frost — frosted-glass primitives, tuned to sit over the condition
+     gradient (works on light and dark grounds alike). */
+  --frost-bg: rgba(255, 255, 255, 0.13);
+  --frost-border: rgba(255, 255, 255, 0.22);
+  --frost-blur: blur(16px) saturate(1.1);
+  --frost-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --frost-shadow: 0 16px 32px -18px rgba(0, 0, 0, 0.5);
+
+  --chip-bg: rgba(255, 255, 255, 0.14);
+  --chip-border: rgba(255, 255, 255, 0.16);
+
   color-scheme: dark;
 }
 
@@ -42,4 +53,21 @@ button {
   font: inherit;
   color: inherit;
   cursor: pointer;
+}
+
+/* Frosted-glass panel — the app's core surface. */
+.frost {
+  background: var(--frost-bg);
+  border: 1px solid var(--frost-border);
+  border-radius: var(--radius);
+  backdrop-filter: var(--frost-blur);
+  -webkit-backdrop-filter: var(--frost-blur);
+  box-shadow: var(--frost-highlight), var(--frost-shadow);
+}
+
+/* Smaller nested glass element (stat tiles, day cells). */
+.frost-chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 14px;
 }

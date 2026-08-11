@@ -14,7 +14,7 @@ const dayLabel = (dateStr, index) => {
 </script>
 
 <template>
-  <section class="daily">
+  <section class="daily frost">
     <h2 class="section-title">7-Day Forecast</h2>
     <ul>
       <li v-for="(day, i) in daily" :key="day.date" class="row">
@@ -37,12 +37,9 @@ const dayLabel = (dateStr, index) => {
 </template>
 
 <style scoped>
+/* Panel styling comes from the shared .frost class; only spacing here. */
 .daily {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: var(--radius);
   padding: 8px 16px;
-  backdrop-filter: blur(8px);
 }
 
 .section-title {

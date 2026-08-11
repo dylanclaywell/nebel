@@ -21,28 +21,30 @@ const placeLabel = () => {
     <p class="place">{{ placeLabel() }}</p>
     <p v-if="subtitle" class="locality">{{ subtitle }}</p>
 
-    <div class="hero">
-      <WeatherIcon class="icon" :name="current.weather.meteoconsName" />
-      <span class="temp">{{ current.temperature }}°</span>
+    <div class="card frost">
+      <div class="hero">
+        <WeatherIcon class="icon" :name="current.weather.meteoconsName" />
+        <span class="temp">{{ current.temperature }}°</span>
+      </div>
+
+      <p class="summary">{{ current.weather.label }}</p>
+      <p class="feels">Feels like {{ current.apparentTemperature }}°</p>
+
+      <dl class="stats">
+        <div class="stat frost-chip">
+          <dt>Wind</dt>
+          <dd>{{ current.windSpeed }} {{ current.units.windSpeed }}</dd>
+        </div>
+        <div class="stat frost-chip">
+          <dt>Humidity</dt>
+          <dd>{{ current.humidity }}%</dd>
+        </div>
+        <div class="stat frost-chip">
+          <dt>Precip</dt>
+          <dd>{{ current.precipitation }} {{ current.units.precipitation }}</dd>
+        </div>
+      </dl>
     </div>
-
-    <p class="summary">{{ current.weather.label }}</p>
-    <p class="feels">Feels like {{ current.apparentTemperature }}°</p>
-
-    <dl class="stats">
-      <div>
-        <dt>Wind</dt>
-        <dd>{{ current.windSpeed }} {{ current.units.windSpeed }}</dd>
-      </div>
-      <div>
-        <dt>Humidity</dt>
-        <dd>{{ current.humidity }}%</dd>
-      </div>
-      <div>
-        <dt>Precip</dt>
-        <dd>{{ current.precipitation }} {{ current.units.precipitation }}</dd>
-      </div>
-    </dl>
   </section>
 </template>
 
@@ -64,12 +66,17 @@ const placeLabel = () => {
   margin-top: 1px;
 }
 
+.card {
+  margin-top: 16px;
+  padding: 20px 18px 18px;
+  text-align: center;
+}
+
 .hero {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin: 4px 0;
 }
 
 .icon {
@@ -82,7 +89,7 @@ const placeLabel = () => {
 
 .temp {
   font-size: 5rem;
-  font-weight: 200;
+  font-weight: 300;
   letter-spacing: -0.03em;
 }
 
@@ -98,22 +105,26 @@ const placeLabel = () => {
 }
 
 .stats {
-  display: flex;
-  justify-content: center;
-  gap: 28px;
-  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.stat {
+  padding: 10px 6px;
 }
 
 .stats dt {
   color: var(--scene-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
 
 .stats dd {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 600;
-  margin-top: 2px;
+  margin-top: 3px;
 }
 </style>
