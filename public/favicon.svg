@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Nebel">
+  <defs>
+    <linearGradient id="fog" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5a78a0" />
+      <stop offset="1" stop-color="#141e34" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#fog)" />
+  <g fill="#ffffff">
+    <rect x="120" y="250" width="272" height="26" rx="13" opacity="0.55" />
+    <rect x="150" y="300" width="212" height="26" rx="13" opacity="0.4" />
+    <rect x="170" y="200" width="172" height="26" rx="13" opacity="0.3" />
+  </g>
+</svg>
