@@ -1,12 +1,14 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue'
 import WeatherScene from './WeatherScene.vue'
+import AlertBanner from './AlertBanner.vue'
 import CurrentConditions from './CurrentConditions.vue'
 import HourlyForecast from './HourlyForecast.vue'
 import DailyForecast from './DailyForecast.vue'
 import { useForecast } from '../composables/useForecast.js'
 import { getCurrentPosition } from '../composables/useGeolocation.js'
 import { reverseGeocode } from '../api/reverseGeocode.js'
+import { fetchAlerts } from '../api/nwsAlerts.js'
 import { PALETTE } from '../data/weatherCodes.js'
 
 const props = defineProps({
@@ -23,6 +25,16 @@ const { forecast, loading, error, load } = useForecast()
 // Resolved place name for the current-location page (reverse-geocoded).
 const locality = ref('')
 
+// Active NWS severe-weather alerts (US only; empty elsewhere).
+const alerts = ref([])
+async function loadAlerts(latitude, longitude) {
+  try {
+    alerts.value = await fetchAlerts(latitude, longitude)
+  } catch {
+    alerts.value = []
+  }
+}
+
 const swatch = computed(
   () => forecast.value?.current.weather.swatch ?? NEUTRAL_SWATCH,
 )
@@ -34,6 +46,7 @@ async function refresh() {
     try {
       const { latitude, longitude } = await getCurrentPosition()
       await load({ latitude, longitude })
+      loadAlerts(latitude, longitude) // fire-and-forget; never blocks the forecast
       // Best-effort locality label; failure here shouldn't break the page.
       try {
         const place = await reverseGeocode(latitude, longitude)
@@ -58,6 +71,7 @@ async function refresh() {
       country: props.location.country,
     },
   })
+  loadAlerts(props.location.latitude, props.location.longitude)
 }
 
 onMounted(refresh)
@@ -73,6 +87,7 @@ onMounted(refresh)
     </p>
 
     <template v-else-if="forecast">
+      <AlertBanner v-if="alerts.length" :alerts="alerts" />
       <CurrentConditions
         :current="forecast.current"
         :place="location.type === 'current' ? null : forecast.place"
