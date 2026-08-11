@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, computed, ref } from 'vue'
+import { onMounted, computed, ref, defineAsyncComponent } from 'vue'
 import WeatherScene from './WeatherScene.vue'
 import Icon from './Icon.vue'
 import AlertBanner from './AlertBanner.vue'
@@ -7,6 +7,9 @@ import CurrentConditions from './CurrentConditions.vue'
 import PrecipNowcast from './PrecipNowcast.vue'
 import HourlyForecast from './HourlyForecast.vue'
 import DailyForecast from './DailyForecast.vue'
+
+// Leaflet + the radar screen load only when the user opens radar.
+const RadarView = defineAsyncComponent(() => import('./RadarView.vue'))
 import { useForecast } from '../composables/useForecast.js'
 import { getCurrentPosition } from '../composables/useGeolocation.js'
 import { reverseGeocode } from '../api/reverseGeocode.js'
@@ -26,6 +29,14 @@ const { forecast, loading, error, load } = useForecast()
 
 // Resolved place name for the current-location page (reverse-geocoded).
 const locality = ref('')
+
+// Resolved coordinates (for the radar screen) and radar open state.
+const coords = ref(null)
+const radarOpen = ref(false)
+const radarTitle = computed(() => {
+  if (props.location.type === 'current') return locality.value || 'Current Location'
+  return [props.location.name, props.location.admin1].filter(Boolean).join(', ')
+})
 
 // Active NWS severe-weather alerts (US only; empty elsewhere).
 const alerts = ref([])
@@ -47,6 +58,7 @@ async function refresh() {
   if (props.location.type === 'current') {
     try {
       const { latitude, longitude } = await getCurrentPosition()
+      coords.value = { latitude, longitude }
       await load({ latitude, longitude })
       loadAlerts(latitude, longitude) // fire-and-forget; never blocks the forecast
       // Best-effort locality label; failure here shouldn't break the page.
@@ -64,6 +76,10 @@ async function refresh() {
     return
   }
 
+  coords.value = {
+    latitude: props.location.latitude,
+    longitude: props.location.longitude,
+  }
   await load({
     latitude: props.location.latitude,
     longitude: props.location.longitude,
@@ -95,7 +111,11 @@ onMounted(refresh)
         :place="location.type === 'current' ? null : forecast.place"
         :subtitle="location.type === 'current' ? locality : ''"
       />
-      <PrecipNowcast v-if="forecast.minutely.length" :minutely="forecast.minutely" />
+      <PrecipNowcast
+        v-if="forecast.minutely.length"
+        :minutely="forecast.minutely"
+        @radar="radarOpen = true"
+      />
       <HourlyForecast :hourly="forecast.hourly" :now="forecast.current.time" />
       <DailyForecast :daily="forecast.daily" />
 
@@ -104,6 +124,14 @@ onMounted(refresh)
         Remove location
       </button>
     </template>
+
+    <RadarView
+      v-if="radarOpen && coords"
+      :latitude="coords.latitude"
+      :longitude="coords.longitude"
+      :title="radarTitle"
+      @close="radarOpen = false"
+    />
   </WeatherScene>
 </template>
 

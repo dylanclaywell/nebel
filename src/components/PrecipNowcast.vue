@@ -1,17 +1,26 @@
 <script setup>
 import { computed } from 'vue'
 import { summarizeNowcast } from '../utils/nowcast.js'
+import Icon from './Icon.vue'
 
 const props = defineProps({
   minutely: { type: Array, required: true },
 })
+
+defineEmits(['radar'])
 
 const summary = computed(() => summarizeNowcast(props.minutely))
 </script>
 
 <template>
   <section class="nowcast frost">
-    <h2 class="section-title">Next 2 Hours</h2>
+    <div class="head">
+      <h2 class="section-title">Next 2 Hours</h2>
+      <button class="radar-btn" @click="$emit('radar')">
+        <Icon name="map" />
+        <span>Radar</span>
+      </button>
+    </div>
     <p class="summary">{{ summary.text }}</p>
 
     <template v-if="summary.hasPrecip">
@@ -38,12 +47,35 @@ const summary = computed(() => summarizeNowcast(props.minutely))
   padding: 12px 16px 14px;
 }
 
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+}
+
 .section-title {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--scene-text-muted);
-  padding-bottom: 8px;
+}
+
+.radar-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px 5px 9px;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  color: var(--scene-text);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.radar-btn :deep(.icon) {
+  font-size: 1rem;
 }
 
 .summary {
