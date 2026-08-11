@@ -34,16 +34,9 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  /* Respect iOS safe areas when installed as a PWA */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right)
-    env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
-#app {
-  max-width: 640px;
-  margin: 0 auto;
-  padding: var(--gap);
-}
+/* Layout and safe-area handling live in WeatherScene, which is full-bleed. */
 
 button {
   font: inherit;

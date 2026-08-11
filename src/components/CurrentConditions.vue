@@ -1,0 +1,104 @@
+<script setup>
+const props = defineProps({
+  current: { type: Object, required: true },
+  place: { type: Object, default: null },
+})
+
+const placeLabel = () => {
+  const p = props.place
+  if (!p) return 'Current Location'
+  return [p.name, p.admin1].filter(Boolean).join(', ')
+}
+</script>
+
+<template>
+  <section class="current">
+    <p class="place">{{ placeLabel() }}</p>
+
+    <div class="hero">
+      <span class="icon" aria-hidden="true">{{ current.weather.icon }}</span>
+      <span class="temp">{{ current.temperature }}°</span>
+    </div>
+
+    <p class="summary">{{ current.weather.label }}</p>
+    <p class="feels">Feels like {{ current.apparentTemperature }}°</p>
+
+    <dl class="stats">
+      <div>
+        <dt>Wind</dt>
+        <dd>{{ current.windSpeed }} {{ current.units.windSpeed }}</dd>
+      </div>
+      <div>
+        <dt>Humidity</dt>
+        <dd>{{ current.humidity }}%</dd>
+      </div>
+      <div>
+        <dt>Precip</dt>
+        <dd>{{ current.precipitation }} {{ current.units.precipitation }}</dd>
+      </div>
+    </dl>
+  </section>
+</template>
+
+<style scoped>
+.current {
+  text-align: center;
+  padding: 8px 0 24px;
+}
+
+.place {
+  font-size: 1.05rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.hero {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.icon {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.temp {
+  font-size: 5rem;
+  font-weight: 200;
+  letter-spacing: -0.03em;
+}
+
+.summary {
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+.feels {
+  color: var(--scene-text-muted);
+  font-size: 0.95rem;
+  margin-top: 2px;
+}
+
+.stats {
+  display: flex;
+  justify-content: center;
+  gap: 28px;
+  margin-top: 20px;
+}
+
+.stats dt {
+  color: var(--scene-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stats dd {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+</style>
