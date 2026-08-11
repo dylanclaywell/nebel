@@ -11,6 +11,8 @@ import map from '../icons/phosphor/map-trifold.svg?raw'
 import close from '../icons/phosphor/x.svg?raw'
 import sun from '../icons/phosphor/sun.svg?raw'
 import moon from '../icons/phosphor/moon.svg?raw'
+import play from '../icons/phosphor/play-fill.svg?raw'
+import pause from '../icons/phosphor/pause-fill.svg?raw'
 
 export const UI_ICONS = {
   plus,
@@ -22,4 +24,6 @@ export const UI_ICONS = {
   close,
   sun,
   moon,
+  play,
+  pause,
 }
