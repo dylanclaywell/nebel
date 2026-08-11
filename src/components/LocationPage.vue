@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, computed, ref } from 'vue'
 import WeatherScene from './WeatherScene.vue'
+import Icon from './Icon.vue'
 import AlertBanner from './AlertBanner.vue'
 import CurrentConditions from './CurrentConditions.vue'
 import HourlyForecast from './HourlyForecast.vue'
@@ -97,6 +98,7 @@ onMounted(refresh)
       <DailyForecast :daily="forecast.daily" />
 
       <button v-if="isSaved" class="remove" @click="emit('remove', location.id)">
+        <Icon name="trash" />
         Remove location
       </button>
     </template>
@@ -126,7 +128,14 @@ onMounted(refresh)
 .remove {
   align-self: center;
   margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   color: var(--scene-text-muted);
   font-size: 0.85rem;
+}
+
+.remove :deep(.icon) {
+  font-size: 1rem;
 }
 </style>

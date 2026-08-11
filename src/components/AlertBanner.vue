@@ -1,5 +1,6 @@
 <script setup>
 import { ref } from 'vue'
+import Icon from './Icon.vue'
 
 defineProps({
   alerts: { type: Array, required: true },
@@ -56,17 +57,9 @@ function onLeave(el, done) {
         :aria-expanded="openId === a.id"
         @click="toggle(a.id)"
       >
-        <svg class="warn" viewBox="0 0 24 24" aria-hidden="true">
-          <path
-            d="M12 3.5 1.8 21h20.4L12 3.5Z"
-            fill="currentColor"
-            opacity="0.92"
-          />
-          <rect x="11" y="9.5" width="2" height="5.5" rx="1" fill="#1a1205" />
-          <circle cx="12" cy="17.5" r="1.15" fill="#1a1205" />
-        </svg>
+        <Icon name="warning" class="warn" />
         <span class="event">{{ a.event }}</span>
-        <span class="chev" :class="{ open: openId === a.id }" aria-hidden="true">›</span>
+        <Icon name="caret-right" class="chev" :class="{ open: openId === a.id }" />
       </button>
 
       <Transition :css="false" @enter="onEnter" @leave="onLeave">
@@ -135,8 +128,7 @@ function onLeave(el, done) {
 }
 
 .warn {
-  width: 20px;
-  height: 20px;
+  font-size: 22px;
   flex: 0 0 auto;
   color: #ffd84a;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
@@ -150,14 +142,13 @@ function onLeave(el, done) {
 }
 
 .chev {
-  font-size: 1.3rem;
-  line-height: 1;
+  font-size: 1.2rem;
+  flex: 0 0 auto;
   opacity: 0.8;
-  transform: rotate(90deg);
   transition: transform 200ms ease;
 }
 .chev.open {
-  transform: rotate(-90deg);
+  transform: rotate(90deg);
 }
 
 .body {

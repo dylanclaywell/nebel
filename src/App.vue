@@ -2,6 +2,7 @@
 import { ref, nextTick } from 'vue'
 import LocationPage from './components/LocationPage.vue'
 import LocationSearch from './components/LocationSearch.vue'
+import Icon from './components/Icon.vue'
 import { useLocations } from './composables/useLocations.js'
 
 const { pages, add, remove } = useLocations()
@@ -65,7 +66,7 @@ function handleRemove(id) {
       </nav>
 
       <button class="add" aria-label="Add location" @click="searchOpen = true">
-        +
+        <Icon name="plus" />
       </button>
     </header>
 

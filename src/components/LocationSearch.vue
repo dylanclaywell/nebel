@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount } from 'vue'
 import { geocode } from '../api/openMeteo.js'
+import Icon from './Icon.vue'
 
 const emit = defineEmits(['add', 'close'])
 
@@ -46,15 +47,18 @@ onBeforeUnmount(() => clearTimeout(debounce))
   <div class="overlay" @click.self="emit('close')">
     <div class="sheet">
       <div class="sheet-head">
-        <input
-          ref="inputEl"
-          v-model="query"
-          type="search"
-          placeholder="Search city…"
-          autocomplete="off"
-          autocorrect="off"
-          spellcheck="false"
-        />
+        <div class="field">
+          <Icon name="search" class="search-ico" />
+          <input
+            ref="inputEl"
+            v-model="query"
+            type="search"
+            placeholder="Search city…"
+            autocomplete="off"
+            autocorrect="off"
+            spellcheck="false"
+          />
+        </div>
         <button class="cancel" @click="emit('close')">Cancel</button>
       </div>
 
@@ -108,12 +112,28 @@ onBeforeUnmount(() => clearTimeout(debounce))
   border-bottom: 1px solid var(--border);
 }
 
+.field {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-ico {
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
 input {
   flex: 1;
+  width: 100%;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 10px 14px;
+  padding: 10px 14px 10px 38px;
   color: var(--text);
   font-size: 1rem;
 }
