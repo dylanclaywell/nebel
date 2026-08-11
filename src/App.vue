@@ -1,104 +1,177 @@
 <script setup>
-import { onMounted, computed } from 'vue'
-import WeatherScene from './components/WeatherScene.vue'
-import CurrentConditions from './components/CurrentConditions.vue'
-import DailyForecast from './components/DailyForecast.vue'
-import { useForecast } from './composables/useForecast.js'
-import { getCurrentPosition } from './composables/useGeolocation.js'
-import { PALETTE } from './data/weatherCodes.js'
+import { ref, nextTick } from 'vue'
+import LocationPage from './components/LocationPage.vue'
+import LocationSearch from './components/LocationSearch.vue'
+import { useLocations } from './composables/useLocations.js'
 
-// Shown while loading or if everything fails.
-const NEUTRAL_SWATCH = PALETTE.cloudy.night
+const { pages, add, remove } = useLocations()
 
-// Fallback location if geolocation is unavailable or denied.
-const FALLBACK = {
-  latitude: 39.16533,
-  longitude: -86.52639,
-  place: { name: 'Bloomington', admin1: 'Indiana', country: 'United States' },
+const pager = ref(null)
+const activeIndex = ref(0)
+const searchOpen = ref(false)
+
+function onScroll() {
+  const el = pager.value
+  if (!el) return
+  activeIndex.value = Math.round(el.scrollLeft / el.clientWidth)
 }
 
-const { forecast, loading, error, load } = useForecast()
+function scrollToPage(index) {
+  const el = pager.value
+  if (!el) return
+  el.scrollTo({ left: index * el.clientWidth, behavior: 'smooth' })
+}
 
-const swatch = computed(
-  () => forecast.value?.current.weather.swatch ?? NEUTRAL_SWATCH,
-)
+async function handleAdd(place) {
+  add(place)
+  searchOpen.value = false
+  await nextTick()
+  // Jump to the newly added page (last in the list).
+  scrollToPage(pages.value.length - 1)
+}
 
-async function loadCurrentLocation() {
-  try {
-    const { latitude, longitude } = await getCurrentPosition()
-    await load({ latitude, longitude })
-  } catch {
-    // Geolocation denied/unavailable — fall back to a default city.
-    await load(FALLBACK)
+function handleRemove(id) {
+  const removedIndex = pages.value.findIndex((p) => p.id === id)
+  remove(id)
+  if (activeIndex.value >= pages.value.length) {
+    activeIndex.value = pages.value.length - 1
+  } else if (removedIndex <= activeIndex.value && activeIndex.value > 0) {
+    activeIndex.value -= 1
   }
+  nextTick(() => scrollToPage(activeIndex.value))
 }
-
-onMounted(loadCurrentLocation)
 </script>
 
 <template>
-  <WeatherScene :swatch="swatch">
-    <header class="bar">
+  <div class="app">
+    <div ref="pager" class="pager" @scroll.passive="onScroll">
+      <section v-for="page in pages" :key="page.id" class="page">
+        <LocationPage :location="page" @remove="handleRemove" />
+      </section>
+    </div>
+
+    <header class="topbar">
       <h1>Nebel</h1>
-      <button class="refresh" :disabled="loading" @click="loadCurrentLocation">
-        {{ loading ? '…' : '↻' }}
+
+      <nav class="dots" aria-label="Locations">
+        <button
+          v-for="(page, i) in pages"
+          :key="page.id"
+          class="dot"
+          :class="{ active: i === activeIndex, current: page.type === 'current' }"
+          :aria-label="page.name"
+          @click="scrollToPage(i)"
+        />
+      </nav>
+
+      <button class="add" aria-label="Add location" @click="searchOpen = true">
+        +
       </button>
     </header>
 
-    <p v-if="loading && !forecast" class="status">Loading weather…</p>
-
-    <p v-else-if="error && !forecast" class="status">
-      {{ error }}
-      <button class="retry" @click="loadCurrentLocation">Retry</button>
-    </p>
-
-    <template v-else-if="forecast">
-      <CurrentConditions :current="forecast.current" :place="forecast.place" />
-      <DailyForecast :daily="forecast.daily" />
-    </template>
-  </WeatherScene>
+    <LocationSearch
+      v-if="searchOpen"
+      @add="handleAdd"
+      @close="searchOpen = false"
+    />
+  </div>
 </template>
 
 <style scoped>
-.bar {
+.app {
+  position: fixed;
+  inset: 0;
+}
+
+.pager {
+  display: flex;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.pager::-webkit-scrollbar {
+  display: none;
+}
+
+.page {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  scroll-snap-align: start;
+}
+
+.topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
+  padding: calc(env(safe-area-inset-top) + 12px) 18px 12px;
+  pointer-events: none;
+}
+
+.topbar > * {
+  pointer-events: auto;
 }
 
 h1 {
-  font-size: 1.35rem;
+  font-size: 1.1rem;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-.refresh {
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+.dots {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+}
+
+.dot {
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
-  width: 36px;
-  height: 36px;
-  font-size: 1.1rem;
+  border: none;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.4);
+  transition: background 200ms;
+}
+
+.dot.active {
+  background: #fff;
+}
+
+.dot.current {
+  position: relative;
+}
+
+/* Small ring marks the current-location dot. */
+.dot.current::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.add {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  color: #fff;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  font-size: 1.3rem;
+  line-height: 1;
   display: grid;
   place-items: center;
-}
-
-.refresh:disabled {
-  opacity: 0.6;
-}
-
-.status {
-  text-align: center;
-  color: var(--scene-text-muted);
-  padding: 40px 0;
-}
-
-.retry {
-  display: block;
-  margin: 16px auto 0;
-  background: rgba(255, 255, 255, 0.16);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: 999px;
-  padding: 8px 20px;
 }
 </style>

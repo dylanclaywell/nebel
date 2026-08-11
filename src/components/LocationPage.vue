@@ -1,0 +1,103 @@
+<script setup>
+import { onMounted, computed } from 'vue'
+import WeatherScene from './WeatherScene.vue'
+import CurrentConditions from './CurrentConditions.vue'
+import DailyForecast from './DailyForecast.vue'
+import { useForecast } from '../composables/useForecast.js'
+import { getCurrentPosition } from '../composables/useGeolocation.js'
+import { PALETTE } from '../data/weatherCodes.js'
+
+const props = defineProps({
+  // A page descriptor from useLocations().pages
+  location: { type: Object, required: true },
+})
+
+const emit = defineEmits(['remove'])
+
+const NEUTRAL_SWATCH = PALETTE.cloudy.night
+
+const { forecast, loading, error, load } = useForecast()
+
+const swatch = computed(
+  () => forecast.value?.current.weather.swatch ?? NEUTRAL_SWATCH,
+)
+
+const isSaved = computed(() => props.location.type === 'saved')
+
+async function refresh() {
+  if (props.location.type === 'current') {
+    try {
+      const { latitude, longitude } = await getCurrentPosition()
+      await load({ latitude, longitude })
+    } catch (err) {
+      error.value = err.message ?? 'Could not get your location.'
+      forecast.value = null
+      loading.value = false
+    }
+    return
+  }
+
+  await load({
+    latitude: props.location.latitude,
+    longitude: props.location.longitude,
+    place: {
+      name: props.location.name,
+      admin1: props.location.admin1,
+      country: props.location.country,
+    },
+  })
+}
+
+onMounted(refresh)
+</script>
+
+<template>
+  <WeatherScene :swatch="swatch">
+    <p v-if="loading && !forecast" class="status">Loading weather…</p>
+
+    <p v-else-if="error && !forecast" class="status">
+      {{ error }}
+      <button class="pill" @click="refresh">Retry</button>
+    </p>
+
+    <template v-else-if="forecast">
+      <CurrentConditions
+        :current="forecast.current"
+        :place="location.type === 'current' ? null : forecast.place"
+      />
+      <DailyForecast :daily="forecast.daily" />
+
+      <button v-if="isSaved" class="remove" @click="emit('remove', location.id)">
+        Remove location
+      </button>
+    </template>
+  </WeatherScene>
+</template>
+
+<style scoped>
+.status {
+  text-align: center;
+  color: var(--scene-text-muted);
+  padding: 60px 0;
+}
+
+.pill,
+.remove {
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  padding: 8px 20px;
+}
+
+.pill {
+  display: block;
+  margin: 16px auto 0;
+}
+
+.remove {
+  align-self: center;
+  margin-top: 8px;
+  color: var(--scene-text-muted);
+  font-size: 0.85rem;
+}
+</style>
