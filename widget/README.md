@@ -28,5 +28,6 @@ Pin different locations by adding multiple widgets with different parameters.
 - Tapping the widget opens the PWA (`CONFIG.pwaUrl` — currently a placeholder;
   update it once the PWA is deployed).
 - Units and refresh interval are in the `CONFIG` block at the top of the script.
-- Icons are SF Symbols for now; a later version swaps in the PWA's glass icons
-  (pre-rasterized and embedded).
+- Weather icons are the PWA's glass icons, pre-rasterized to PNG and embedded as
+  base64 (`npm run build:widget`, via `scripts/build-widget.mjs`). SF Symbols are
+  the fallback if an icon is missing.
