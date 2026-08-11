@@ -16,54 +16,57 @@
 /**
  * @typedef {Object} WeatherCode
  * @property {string} label     Human-readable description.
- * @property {string} icon      Emoji used by the PWA (and as a widget fallback).
+ * @property {string} icon      Emoji (legacy fallback / at-a-glance reference).
  * @property {string} sfSymbol  SF Symbol name for the Scriptable widget.
+ * @property {string} meteocons Meteocons icon name (day/neutral form; the night
+ *                              variant is derived by swapping `-day` for `-night`).
  * @property {ConditionGroup} group
  */
 
 /** @type {Record<number, WeatherCode>} */
 export const WEATHER_CODES = {
-  0: { label: 'Clear sky', icon: '☀️', sfSymbol: 'sun.max.fill', group: 'clear' },
-  1: { label: 'Mainly clear', icon: '🌤️', sfSymbol: 'sun.max.fill', group: 'clear' },
-  2: { label: 'Partly cloudy', icon: '⛅', sfSymbol: 'cloud.sun.fill', group: 'partlyCloudy' },
-  3: { label: 'Overcast', icon: '☁️', sfSymbol: 'cloud.fill', group: 'cloudy' },
+  0: { label: 'Clear sky', icon: '☀️', sfSymbol: 'sun.max.fill', meteocons: 'clear-day', group: 'clear' },
+  1: { label: 'Mainly clear', icon: '🌤️', sfSymbol: 'sun.max.fill', meteocons: 'clear-day', group: 'clear' },
+  2: { label: 'Partly cloudy', icon: '⛅', sfSymbol: 'cloud.sun.fill', meteocons: 'partly-cloudy-day', group: 'partlyCloudy' },
+  3: { label: 'Overcast', icon: '☁️', sfSymbol: 'cloud.fill', meteocons: 'overcast', group: 'cloudy' },
 
-  45: { label: 'Fog', icon: '🌫️', sfSymbol: 'cloud.fog.fill', group: 'fog' },
-  48: { label: 'Rime fog', icon: '🌫️', sfSymbol: 'cloud.fog.fill', group: 'fog' },
+  45: { label: 'Fog', icon: '🌫️', sfSymbol: 'cloud.fog.fill', meteocons: 'fog-day', group: 'fog' },
+  48: { label: 'Rime fog', icon: '🌫️', sfSymbol: 'cloud.fog.fill', meteocons: 'fog-day', group: 'fog' },
 
-  51: { label: 'Light drizzle', icon: '🌦️', sfSymbol: 'cloud.drizzle.fill', group: 'drizzle' },
-  53: { label: 'Drizzle', icon: '🌦️', sfSymbol: 'cloud.drizzle.fill', group: 'drizzle' },
-  55: { label: 'Heavy drizzle', icon: '🌧️', sfSymbol: 'cloud.drizzle.fill', group: 'drizzle' },
-  56: { label: 'Freezing drizzle', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', group: 'drizzle' },
-  57: { label: 'Freezing drizzle', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', group: 'drizzle' },
+  51: { label: 'Light drizzle', icon: '🌦️', sfSymbol: 'cloud.drizzle.fill', meteocons: 'drizzle', group: 'drizzle' },
+  53: { label: 'Drizzle', icon: '🌦️', sfSymbol: 'cloud.drizzle.fill', meteocons: 'drizzle', group: 'drizzle' },
+  55: { label: 'Heavy drizzle', icon: '🌧️', sfSymbol: 'cloud.drizzle.fill', meteocons: 'drizzle', group: 'drizzle' },
+  56: { label: 'Freezing drizzle', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', meteocons: 'sleet', group: 'drizzle' },
+  57: { label: 'Freezing drizzle', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', meteocons: 'sleet', group: 'drizzle' },
 
-  61: { label: 'Light rain', icon: '🌧️', sfSymbol: 'cloud.rain.fill', group: 'rain' },
-  63: { label: 'Rain', icon: '🌧️', sfSymbol: 'cloud.rain.fill', group: 'rain' },
-  65: { label: 'Heavy rain', icon: '🌧️', sfSymbol: 'cloud.heavyrain.fill', group: 'rain' },
-  66: { label: 'Freezing rain', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', group: 'rain' },
-  67: { label: 'Freezing rain', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', group: 'rain' },
+  61: { label: 'Light rain', icon: '🌧️', sfSymbol: 'cloud.rain.fill', meteocons: 'rain', group: 'rain' },
+  63: { label: 'Rain', icon: '🌧️', sfSymbol: 'cloud.rain.fill', meteocons: 'rain', group: 'rain' },
+  65: { label: 'Heavy rain', icon: '🌧️', sfSymbol: 'cloud.heavyrain.fill', meteocons: 'rain', group: 'rain' },
+  66: { label: 'Freezing rain', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', meteocons: 'sleet', group: 'rain' },
+  67: { label: 'Freezing rain', icon: '🌧️', sfSymbol: 'cloud.sleet.fill', meteocons: 'sleet', group: 'rain' },
 
-  71: { label: 'Light snow', icon: '🌨️', sfSymbol: 'cloud.snow.fill', group: 'snow' },
-  73: { label: 'Snow', icon: '🌨️', sfSymbol: 'cloud.snow.fill', group: 'snow' },
-  75: { label: 'Heavy snow', icon: '❄️', sfSymbol: 'cloud.snow.fill', group: 'snow' },
-  77: { label: 'Snow grains', icon: '🌨️', sfSymbol: 'cloud.snow.fill', group: 'snow' },
+  71: { label: 'Light snow', icon: '🌨️', sfSymbol: 'cloud.snow.fill', meteocons: 'snow', group: 'snow' },
+  73: { label: 'Snow', icon: '🌨️', sfSymbol: 'cloud.snow.fill', meteocons: 'snow', group: 'snow' },
+  75: { label: 'Heavy snow', icon: '❄️', sfSymbol: 'cloud.snow.fill', meteocons: 'snow', group: 'snow' },
+  77: { label: 'Snow grains', icon: '🌨️', sfSymbol: 'cloud.snow.fill', meteocons: 'snow', group: 'snow' },
 
-  80: { label: 'Light showers', icon: '🌦️', sfSymbol: 'cloud.rain.fill', group: 'rain' },
-  81: { label: 'Showers', icon: '🌧️', sfSymbol: 'cloud.rain.fill', group: 'rain' },
-  82: { label: 'Heavy showers', icon: '🌧️', sfSymbol: 'cloud.heavyrain.fill', group: 'rain' },
+  80: { label: 'Light showers', icon: '🌦️', sfSymbol: 'cloud.rain.fill', meteocons: 'rain', group: 'rain' },
+  81: { label: 'Showers', icon: '🌧️', sfSymbol: 'cloud.rain.fill', meteocons: 'rain', group: 'rain' },
+  82: { label: 'Heavy showers', icon: '🌧️', sfSymbol: 'cloud.heavyrain.fill', meteocons: 'rain', group: 'rain' },
 
-  85: { label: 'Snow showers', icon: '🌨️', sfSymbol: 'cloud.snow.fill', group: 'snow' },
-  86: { label: 'Heavy snow showers', icon: '❄️', sfSymbol: 'cloud.snow.fill', group: 'snow' },
+  85: { label: 'Snow showers', icon: '🌨️', sfSymbol: 'cloud.snow.fill', meteocons: 'snow', group: 'snow' },
+  86: { label: 'Heavy snow showers', icon: '❄️', sfSymbol: 'cloud.snow.fill', meteocons: 'snow', group: 'snow' },
 
-  95: { label: 'Thunderstorm', icon: '⛈️', sfSymbol: 'cloud.bolt.rain.fill', group: 'thunderstorm' },
-  96: { label: 'Thunderstorm, hail', icon: '⛈️', sfSymbol: 'cloud.bolt.rain.fill', group: 'thunderstorm' },
-  99: { label: 'Thunderstorm, heavy hail', icon: '⛈️', sfSymbol: 'cloud.bolt.rain.fill', group: 'thunderstorm' },
+  95: { label: 'Thunderstorm', icon: '⛈️', sfSymbol: 'cloud.bolt.rain.fill', meteocons: 'thunderstorms-rain', group: 'thunderstorm' },
+  96: { label: 'Thunderstorm, hail', icon: '⛈️', sfSymbol: 'cloud.bolt.rain.fill', meteocons: 'thunderstorms-rain', group: 'thunderstorm' },
+  99: { label: 'Thunderstorm, heavy hail', icon: '⛈️', sfSymbol: 'cloud.bolt.rain.fill', meteocons: 'thunderstorms-rain', group: 'thunderstorm' },
 }
 
 const UNKNOWN_CODE = {
   label: 'Unknown',
   icon: '❔',
   sfSymbol: 'questionmark',
+  meteocons: 'overcast',
   group: 'cloudy',
 }
 
@@ -123,14 +126,21 @@ export const PALETTE = {
 }
 
 /**
- * Resolve a WMO code to its full descriptor, including the day/night swatch.
+ * Resolve a WMO code to its full descriptor, including the day/night swatch and
+ * the resolved Meteocons icon name.
  * @param {number} code
  * @param {boolean} [isDay=true]
- * @returns {{ code: number, label: string, icon: string, sfSymbol: string, group: ConditionGroup, isDay: boolean, swatch: Swatch }}
+ * @returns {{ code: number, label: string, icon: string, sfSymbol: string, meteocons: string, meteoconsName: string, group: ConditionGroup, isDay: boolean, swatch: Swatch }}
  */
 export function describeWeather(code, isDay = true) {
   const entry = WEATHER_CODES[code] ?? UNKNOWN_CODE
   const palette = PALETTE[entry.group]
   const swatch = isDay ? palette.day : palette.night
-  return { code, ...entry, isDay, swatch }
+  // Night variant is the same name with `-day` swapped for `-night`; neutral
+  // names (no `-day` suffix) are used as-is for both.
+  const meteoconsName =
+    !isDay && entry.meteocons.endsWith('-day')
+      ? entry.meteocons.replace(/-day$/, '-night')
+      : entry.meteocons
+  return { code, ...entry, isDay, meteoconsName, swatch }
 }

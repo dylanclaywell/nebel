@@ -1,4 +1,6 @@
 <script setup>
+import WeatherIcon from './WeatherIcon.vue'
+
 const props = defineProps({
   daily: { type: Array, required: true },
 })
@@ -17,9 +19,11 @@ const dayLabel = (dateStr, index) => {
     <ul>
       <li v-for="(day, i) in daily" :key="day.date" class="row">
         <span class="day">{{ dayLabel(day.date, i) }}</span>
-        <span class="icon" :title="day.weather.label" aria-hidden="true">
-          {{ day.weather.icon }}
-        </span>
+        <WeatherIcon
+          class="icon"
+          :name="day.weather.meteoconsName"
+          :title="day.weather.label"
+        />
         <span class="precip" :class="{ dry: !day.precipProbability }">
           {{ day.precipProbability ? day.precipProbability + '%' : '' }}
         </span>
@@ -55,7 +59,7 @@ ul {
 
 .row {
   display: grid;
-  grid-template-columns: 3.2rem 1.6rem 2.8rem 1fr;
+  grid-template-columns: 3.2rem 2rem 2.8rem 1fr;
   align-items: center;
   gap: 10px;
   padding: 10px 0;
@@ -71,8 +75,10 @@ ul {
 }
 
 .icon {
-  font-size: 1.25rem;
-  text-align: center;
+  width: 2rem;
+  height: 2rem;
+  margin: -4px 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
 }
 
 .precip {

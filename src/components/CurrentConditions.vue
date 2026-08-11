@@ -1,4 +1,6 @@
 <script setup>
+import WeatherIcon from './WeatherIcon.vue'
+
 const props = defineProps({
   current: { type: Object, required: true },
   place: { type: Object, default: null },
@@ -20,7 +22,7 @@ const placeLabel = () => {
     <p v-if="subtitle" class="locality">{{ subtitle }}</p>
 
     <div class="hero">
-      <span class="icon" aria-hidden="true">{{ current.weather.icon }}</span>
+      <WeatherIcon class="icon" :name="current.weather.meteoconsName" />
       <span class="temp">{{ current.temperature }}°</span>
     </div>
 
@@ -71,8 +73,11 @@ const placeLabel = () => {
 }
 
 .icon {
-  font-size: 3.5rem;
-  line-height: 1;
+  width: 88px;
+  height: 88px;
+  flex: 0 0 auto;
+  /* grounding shadow for the Liquid + Depth glass hero */
+  filter: drop-shadow(0 6px 13px rgba(0, 0, 0, 0.35));
 }
 
 .temp {
