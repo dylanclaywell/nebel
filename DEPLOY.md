@@ -46,8 +46,10 @@ already correct — nothing to change.)
 ## Notes
 
 - **Auto-deploy:** pushing to `main` triggers a new build + deploy.
-- **SPA fallback:** `public/_redirects` (`/* /index.html 200`) serves the app for
-  any path.
+- **Routing:** Nebel is a single page with no client-side routes, so it needs no
+  SPA fallback (a `/* /index.html 200` redirect trips Cloudflare's loop check —
+  don't add one). If routes are ever added, use the project's built-in
+  single-page-application handling rather than a catch-all redirect.
 - **Caching:** `public/_headers` marks fingerprinted `/assets/*` immutable and
   keeps `sw.js` / `index.html` / the manifest revalidating so PWA updates reach
   users promptly.
