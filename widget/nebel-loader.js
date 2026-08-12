@@ -15,10 +15,13 @@ const REPO = 'dylanclaywell/nebel'
 const BRANCH = 'main'
 const URL = `https://raw.githubusercontent.com/${REPO}/${BRANCH}/widget/nebel-widget.js`
 
+// Module name importModule() resolves (the file is written to the same dir).
+const MODULE_NAME = 'nebel-widget'
+
 const fm = FileManager.local()
 const dir = fm.documentsDirectory()
-const scriptPath = fm.joinPath(dir, 'nebel-widget.js')
-const etagPath = fm.joinPath(dir, 'nebel-widget.etag')
+const scriptPath = fm.joinPath(dir, `${MODULE_NAME}.js`)
+const etagPath = fm.joinPath(dir, `${MODULE_NAME}.etag`)
 
 function headerValue(headers, name) {
   const lname = name.toLowerCase()
@@ -26,6 +29,20 @@ function headerValue(headers, name) {
     if (k.toLowerCase() === lname) return headers[k]
   }
   return null
+}
+
+function showError(message) {
+  const w = new ListWidget()
+  w.backgroundColor = new Color('#0b1020')
+  const t = w.addText('Nebel')
+  t.textColor = Color.white()
+  t.font = Font.semiboldSystemFont(14)
+  w.addSpacer(6)
+  const m = w.addText(message)
+  m.textColor = new Color('#9aa3bd')
+  m.font = Font.systemFont(11)
+  Script.setWidget(w)
+  Script.complete()
 }
 
 // Conditional fetch: only download the body when the ETag changed.
@@ -49,20 +66,14 @@ try {
 }
 
 if (!fm.fileExists(scriptPath)) {
-  const w = new ListWidget()
-  w.backgroundColor = new Color('#0b1020')
-  const t = w.addText('Nebel')
-  t.textColor = Color.white()
-  t.font = Font.semiboldSystemFont(14)
-  w.addSpacer(6)
-  const m = w.addText('Couldn’t download the widget. Connect to the internet and run once.')
-  m.textColor = new Color('#9aa3bd')
-  m.font = Font.systemFont(12)
-  Script.setWidget(w)
-  Script.complete()
+  showError('Couldn’t download the widget. Connect to the internet and run once.')
 } else {
-  // Loaded (not pasted) → tell the widget not to auto-run; we call it here.
-  globalThis.__NEBEL_EMBEDDED__ = true
-  const run = importModule(scriptPath)
-  await run()
+  try {
+    // Tell the widget not to auto-run (globals are shared); we call it here.
+    globalThis.__NEBEL_EMBEDDED__ = true
+    const run = importModule(MODULE_NAME)
+    await run()
+  } catch (e) {
+    showError('Widget failed: ' + ((e && e.message) || e))
+  }
 }
