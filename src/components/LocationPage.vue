@@ -21,11 +21,14 @@ const props = defineProps({
   location: { type: Object, required: true },
 })
 
-const emit = defineEmits(['remove'])
+const emit = defineEmits(['remove', 'add'])
 
 const NEUTRAL_SWATCH = PALETTE.cloudy.night
 
 const { forecast, loading, error, load } = useForecast()
+
+// Loading phase for the initial fetch: 'locating' (resolving GPS) then 'loading'.
+const phase = ref(props.location.type === 'current' ? 'locating' : 'loading')
 
 // Resolved place name for the current-location page (reverse-geocoded).
 const locality = ref('')
@@ -57,8 +60,10 @@ const isSaved = computed(() => props.location.type === 'saved')
 async function refresh() {
   if (props.location.type === 'current') {
     try {
+      phase.value = 'locating'
       const { latitude, longitude } = await getCurrentPosition()
       coords.value = { latitude, longitude }
+      phase.value = 'loading'
       await load({ latitude, longitude })
       loadAlerts(latitude, longitude) // fire-and-forget; never blocks the forecast
       // Best-effort locality label; failure here shouldn't break the page.
@@ -97,12 +102,29 @@ onMounted(refresh)
 
 <template>
   <WeatherScene :swatch="swatch">
-    <p v-if="loading && !forecast" class="status">Loading weather…</p>
+    <div v-if="!forecast && !error" class="loading-state">
+      <span class="spinner" aria-hidden="true"></span>
+      <p class="loading-text">
+        {{ phase === 'locating' ? 'Getting your location…' : 'Loading weather…' }}
+      </p>
+    </div>
 
-    <p v-else-if="error && !forecast" class="status">
-      {{ error }}
-      <button class="pill" @click="refresh">Retry</button>
-    </p>
+    <div v-else-if="error && !forecast" class="error-state">
+      <p class="error-msg">{{ error }}</p>
+
+      <template v-if="location.type === 'current'">
+        <p class="error-hint">
+          Turn on location for your browser in Settings — or add a place to see its
+          weather instead.
+        </p>
+        <div class="error-actions">
+          <button class="pill primary" @click="emit('add')">Add a location</button>
+          <button class="pill ghost" @click="refresh">Retry</button>
+        </div>
+      </template>
+
+      <button v-else class="pill primary" @click="refresh">Retry</button>
+    </div>
 
     <template v-else-if="forecast">
       <AlertBanner v-if="alerts.length" :alerts="alerts" />
@@ -142,6 +164,74 @@ onMounted(refresh)
   padding: 60px 0;
 }
 
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 0;
+}
+
+.spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--scene-text);
+  animation: spin 0.8s linear infinite;
+}
+
+.loading-text {
+  color: var(--scene-text-muted);
+  font-size: 0.95rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: spin 1.6s steps(8) infinite;
+  }
+}
+
+.error-state {
+  text-align: center;
+  padding: 56px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.error-msg {
+  color: var(--scene-text);
+  font-weight: 500;
+}
+
+.error-hint {
+  color: var(--scene-text-muted);
+  font-size: 0.9rem;
+  margin-top: 8px;
+  max-width: 30ch;
+  line-height: 1.5;
+}
+
+.error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+/* Standalone button (non-current error) needs its own spacing. */
+.error-state > .pill {
+  margin-top: 20px;
+}
+
 .pill,
 .remove {
   background: rgba(255, 255, 255, 0.16);
@@ -150,9 +240,16 @@ onMounted(refresh)
   padding: 8px 20px;
 }
 
-.pill {
-  display: block;
-  margin: 16px auto 0;
+/* Primary action stands out; ghost is the quieter secondary. */
+.pill.primary {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: transparent;
+  color: #14203a;
+  font-weight: 600;
+}
+
+.pill.ghost {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 .remove {

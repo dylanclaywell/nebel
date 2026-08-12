@@ -47,7 +47,7 @@ function handleRemove(id) {
   <div class="app">
     <div ref="pager" class="pager" @scroll.passive="onScroll">
       <section v-for="page in pages" :key="page.id" class="page">
-        <LocationPage :location="page" @remove="handleRemove" />
+        <LocationPage :location="page" @remove="handleRemove" @add="searchOpen = true" />
       </section>
     </div>
 
