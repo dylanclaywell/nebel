@@ -298,13 +298,15 @@ function buildMedium(widget, d) {
   right.layoutHorizontally()
   right.bottomAlignContent()
   d.hours.forEach((h, i) => {
-    if (i > 0) right.addSpacer(10)
+    if (i > 0) right.addSpacer(8)
     const col = right.addStack()
     col.layoutVertically()
     col.centerAlignContent()
     const hl = col.addText(h.label)
     hl.font = Font.systemFont(11)
     hl.textColor = sub
+    hl.lineLimit = 1
+    hl.minimumScaleFactor = 0.8
     col.addSpacer(3)
     const hwi = weatherImage(h.weather, 15)
     const hi = col.addImage(hwi.image)
@@ -314,6 +316,7 @@ function buildMedium(widget, d) {
     const ht = col.addText(`${h.temp}°`)
     ht.font = Font.mediumSystemFont(12)
     ht.textColor = text
+    ht.lineLimit = 1
   })
 }
 
