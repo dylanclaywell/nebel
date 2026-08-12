@@ -9,7 +9,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "build:icons": "node scripts/build-weather-icons.mjs",
-    "build:widget": "node scripts/build-widget.mjs"
+    "build:widget": "node scripts/build-widget.mjs",
+    "build:widget-preview": "node scripts/build-widget-preview.mjs"
   },
   "dependencies": {
     "leaflet": "^1.9.4",

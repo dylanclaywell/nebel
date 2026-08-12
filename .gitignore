@@ -6,6 +6,9 @@ dist/
 dist-ssr/
 dev-dist/
 
+# Generated widget preview (regenerate with npm run build:widget-preview)
+widget/preview.html
+
 # Local env / secrets
 .env
 .env.local

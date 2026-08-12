@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nebel Widget Preview</title>
+    <style>
+      :root {
+        --bg: #0e1116;
+        --panel: #171d26;
+        --ink: #e9edf4;
+        --dim: #aab3c2;
+        --accent: #7fb4ff;
+        --sans: -apple-system, "SF Pro Text", system-ui, "Segoe UI", Roboto, sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: var(--sans);
+        padding: 32px clamp(16px, 5vw, 56px) 64px;
+      }
+      h1 { font-size: 1.5rem; font-weight: 600; letter-spacing: -0.02em; margin: 0; }
+      .lede { color: var(--dim); margin: 8px 0 0; max-width: 60ch; font-size: 0.95rem; }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin: 24px 0 8px; }
+      .controls input {
+        background: var(--panel); border: 1px solid rgba(255,255,255,0.14);
+        border-radius: 10px; padding: 9px 12px; color: var(--ink); font: inherit; min-width: 220px;
+      }
+      .controls button {
+        background: var(--accent); border: none; border-radius: 10px; padding: 9px 16px;
+        color: #0a1020; font: inherit; font-weight: 600; cursor: pointer;
+      }
+      .hint { color: var(--dim); font-size: 0.8rem; }
+      .stage { display: flex; flex-wrap: wrap; gap: 40px; margin-top: 32px; align-items: flex-start; }
+      .slot { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+      .slot .label { font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+      /* 2x scale for a bigger preview; the widget renders at true point sizes inside. */
+      .scaler { transform: scale(2); transform-origin: top left; }
+      .frame {
+        border-radius: 22px; overflow: hidden; position: relative;
+        box-shadow: 0 20px 50px -18px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.05);
+      }
+      .frame.small { width: 155px; height: 155px; }
+      .frame.medium { width: 329px; height: 155px; }
+      .sizewrap { /* reserve scaled footprint so layout doesn't overlap */ }
+      .sizewrap.small { width: 310px; height: 310px; }
+      .sizewrap.medium { width: 658px; height: 310px; }
+      .err { color: #ff9e8a; font-size: 0.8rem; max-width: 300px; text-align: center; }
+      code { background: rgba(255,255,255,0.08); padding: 1px 5px; border-radius: 5px; font-size: 0.85em; }
+    </style>
+  </head>
+  <body>
+    <h1>Nebel — Widget Preview</h1>
+    <p class="lede">
+      Runs the real <code>nebel-widget.js</code> through a Scriptable API shim and
+      draws it at true widget sizes. Location: leave blank for GPS (falls back to a
+      default if denied), or type a city / <code>lat,lon</code>.
+    </p>
+
+    <div class="controls">
+      <input id="loc" type="text" placeholder="Blank = GPS · or 'Chicago' · or '40.05,-86.01'" />
+      <button id="go">Render</button>
+      <span class="hint">Re-render after changing the location.</span>
+    </div>
+
+    <div class="stage">
+      <div class="slot">
+        <span class="label">Small</span>
+        <div class="sizewrap small"><div class="scaler"><div id="small" class="frame small"></div></div></div>
+        <div id="small-err" class="err"></div>
+      </div>
+      <div class="slot">
+        <span class="label">Medium</span>
+        <div class="sizewrap medium"><div class="scaler"><div id="medium" class="frame medium"></div></div></div>
+        <div id="medium-err" class="err"></div>
+      </div>
+    </div>
+
+    <!-- The real widget source is embedded here by scripts/build-widget-preview.mjs -->
+    <script type="text/plain" id="nebel-widget-src">__WIDGET_SOURCE__</script>
+
+    <script>
+      // ---- Scriptable API shim (enough to run the widget and render it) ----
+      const DEFAULT_COORD = { latitude: 40.0456, longitude: -86.0086 } // Noblesville, IN
+
+      const WEIGHTS = {
+        ultraLight: 100, thin: 100, light: 300, regular: 400, system: 400,
+        medium: 500, semibold: 600, bold: 700, heavy: 800, black: 900,
+      }
+      class SFont {
+        constructor(size, weight) { this.size = size; this.weight = weight }
+      }
+      const Font = {}
+      for (const [k, w] of Object.entries(WEIGHTS)) {
+        const name = k === 'system' ? 'systemFont' : `${k}SystemFont`
+        Font[name] = (s) => new SFont(s, w)
+      }
+      Font.systemFont = (s) => new SFont(s, 400)
+
+      class Color {
+        constructor(hex, alpha = 1) { this.hex = hex; this.alpha = alpha }
+        css() {
+          let h = String(this.hex).replace('#', '')
+          if (h.length === 3) h = h.split('').map((c) => c + c).join('')
+          const r = parseInt(h.slice(0, 2), 16), g = parseInt(h.slice(2, 4), 16), b = parseInt(h.slice(4, 6), 16)
+          return `rgba(${r},${g},${b},${this.alpha})`
+        }
+      }
+      Color.white = () => new Color('#ffffff')
+      Color.black = () => new Color('#000000')
+
+      class Point { constructor(x, y) { this.x = x; this.y = y } }
+      class Size { constructor(width, height) { this.width = width; this.height = height } }
+
+      class LinearGradient {
+        constructor() { this.colors = []; this.locations = []; this.startPoint = new Point(0, 0); this.endPoint = new Point(0, 1) }
+        css() {
+          const sp = this.startPoint, ep = this.endPoint
+          const angle = (Math.atan2(ep.x - sp.x, -(ep.y - sp.y)) * 180 / Math.PI + 360) % 360
+          const stops = this.colors.map((c, i) => {
+            const loc = this.locations && this.locations[i] != null ? this.locations[i] : i / Math.max(1, this.colors.length - 1)
+            return `${c.css()} ${(loc * 100).toFixed(1)}%`
+          }).join(', ')
+          return `linear-gradient(${angle.toFixed(1)}deg, ${stops})`
+        }
+      }
+
+      const SFSymbol = {
+        named(name) {
+          return { name, font: null, applyFont(f) { this.font = f; return this }, get image() { return { sfSymbol: this.name } } }
+        },
+      }
+
+      const Data = { fromBase64String: (b64) => ({ base64: b64 }) }
+      const Image = { fromData: (data) => ({ dataUri: 'data:image/png;base64,' + data.base64 }) }
+
+      class Request {
+        constructor(url) { this.url = url }
+        async loadJSON() { const r = await fetch(this.url); return r.json() }
+      }
+
+      const Location = {
+        setAccuracyToThreeKilometers() {},
+        current() {
+          return new Promise((res) => {
+            if (!navigator.geolocation) return res(DEFAULT_COORD)
+            navigator.geolocation.getCurrentPosition(
+              (p) => res({ latitude: p.coords.latitude, longitude: p.coords.longitude }),
+              () => res(DEFAULT_COORD),
+              { timeout: 8000, maximumAge: 300000 },
+            )
+          })
+        },
+        async reverseGeocode(lat, lon) {
+          try {
+            const d = await (await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`)).json()
+            return [{ locality: d.locality || d.city, subAdministrativeArea: d.city, administrativeArea: d.principalSubdivision }]
+          } catch { return [] }
+        },
+      }
+
+      // ---- widget tree nodes ----
+      class Stack {
+        constructor() { this.type = 'stack'; this.children = []; this.layout = 'h'; this.align = 'top'; this.padding = null }
+        layoutHorizontally() { this.layout = 'h' }
+        layoutVertically() { this.layout = 'v' }
+        centerAlignContent() { this.align = 'center' }
+        topAlignContent() { this.align = 'top' }
+        bottomAlignContent() { this.align = 'bottom' }
+        setPadding(t, l, b, r) { this.padding = [t, l, b, r] }
+        addStack() { const s = new Stack(); this.children.push(s); return s }
+        addText(t) { const x = new WText(t); this.children.push(x); return x }
+        addImage(img) { const x = new WImage(img); this.children.push(x); return x }
+        addSpacer(n) { const x = { type: 'spacer', length: n }; this.children.push(x); return x }
+      }
+      class WText {
+        constructor(t) { this.type = 'text'; this.text = t; this.font = null; this.textColor = null; this.lineLimit = 0 }
+      }
+      class WImage {
+        constructor(img) { this.type = 'image'; this.image = img; this.imageSize = null; this.tintColor = null; this.cornerRadius = 0 }
+      }
+      class ListWidget {
+        constructor() { this.type = 'widget'; this.children = []; this.padding = null; this.backgroundGradient = null; this.backgroundColor = null; this.url = null; this.refreshAfterDate = null }
+        setPadding(t, l, b, r) { this.padding = [t, l, b, r] }
+        addStack() { const s = new Stack(); this.children.push(s); return s }
+        addText(t) { const x = new WText(t); this.children.push(x); return x }
+        addImage(img) { const x = new WImage(img); this.children.push(x); return x }
+        addSpacer(n) { const x = { type: 'spacer', length: n }; this.children.push(x); return x }
+        presentSmall() { return Promise.resolve() }
+        presentMedium() { return Promise.resolve() }
+        presentLarge() { return Promise.resolve() }
+      }
+
+      // ---- render the tree to DOM ----
+      const ALIGN = { top: 'flex-start', center: 'center', bottom: 'flex-end' }
+
+      function renderNode(node, parentLayout) {
+        if (node.type === 'spacer') {
+          const d = document.createElement('div')
+          if (node.length == null) d.style.flex = '1 1 auto'
+          else if (parentLayout === 'v') d.style.height = node.length + 'px'
+          else d.style.width = node.length + 'px'
+          return d
+        }
+        if (node.type === 'text') {
+          const s = document.createElement('span')
+          s.textContent = node.text
+          if (node.font) { s.style.fontSize = node.font.size + 'px'; s.style.fontWeight = node.font.weight }
+          if (node.textColor) s.style.color = node.textColor.css()
+          s.style.lineHeight = '1.05'
+          if (node.lineLimit === 1) { s.style.whiteSpace = 'nowrap'; s.style.overflow = 'hidden'; s.style.textOverflow = 'ellipsis'; s.style.minWidth = '0' }
+          return s
+        }
+        if (node.type === 'image') {
+          if (node.image && node.image.dataUri) {
+            const img = document.createElement('img')
+            img.src = node.image.dataUri
+            if (node.imageSize) { img.style.width = node.imageSize.width + 'px'; img.style.height = node.imageSize.height + 'px' }
+            img.style.objectFit = 'contain'
+            img.style.flex = '0 0 auto'
+            return img
+          }
+          // SF Symbol fallback placeholder (weather uses glass PNGs, so rarely hit)
+          const d = document.createElement('div')
+          if (node.imageSize) { d.style.width = node.imageSize.width + 'px'; d.style.height = node.imageSize.height + 'px' }
+          d.style.borderRadius = '5px'
+          d.style.background = 'rgba(255,255,255,0.25)'
+          d.style.flex = '0 0 auto'
+          return d
+        }
+        // stack
+        const d = document.createElement('div')
+        d.style.display = 'flex'
+        d.style.flexDirection = node.layout === 'v' ? 'column' : 'row'
+        d.style.alignItems = ALIGN[node.align] || 'flex-start'
+        d.style.minWidth = '0'
+        if (node.padding) d.style.padding = node.padding.map((n) => n + 'px').join(' ')
+        for (const c of node.children) d.appendChild(renderNode(c, node.layout))
+        return d
+      }
+
+      function renderWidget(widget, el) {
+        el.innerHTML = ''
+        el.style.display = 'flex'
+        el.style.flexDirection = 'column'
+        el.style.alignItems = 'stretch'
+        // Scriptable centers content vertically when nothing fills the height;
+        // a flexible addSpacer() still overrides this (it consumes the free space).
+        el.style.justifyContent = 'center'
+        el.style.fontFamily = 'var(--sans)'
+        if (widget.padding) el.style.padding = widget.padding.map((n) => n + 'px').join(' ')
+        if (widget.backgroundGradient) el.style.background = widget.backgroundGradient.css()
+        else if (widget.backgroundColor) el.style.background = widget.backgroundColor.css()
+        for (const c of widget.children) el.appendChild(renderNode(c, 'v'))
+      }
+
+      // ---- harness: run the real widget code per family ----
+      const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor
+      const WIDGET_SRC = document.getElementById('nebel-widget-src').textContent
+      const ARG_NAMES = ['ListWidget', 'Color', 'LinearGradient', 'Font', 'SFSymbol', 'Point', 'Size', 'Data', 'Image', 'Request', 'Location', 'args', 'config', 'Script']
+
+      async function runFamily(family, param) {
+        let captured = null
+        const shim = {
+          ListWidget, Color, LinearGradient, Font, SFSymbol, Point, Size, Data, Image, Request, Location,
+          args: { widgetParameter: param },
+          config: { widgetFamily: family, runsInWidget: true, runsInApp: false },
+          Script: { setWidget(w) { captured = w }, complete() {} },
+        }
+        const fn = new AsyncFunction(...ARG_NAMES, WIDGET_SRC)
+        await fn(...ARG_NAMES.map((n) => shim[n]))
+        return captured
+      }
+
+      async function render(param) {
+        for (const family of ['small', 'medium']) {
+          const el = document.getElementById(family)
+          const errEl = document.getElementById(family + '-err')
+          errEl.textContent = ''
+          el.innerHTML = ''
+          try {
+            const widget = await runFamily(family, param)
+            if (widget) renderWidget(widget, el)
+          } catch (e) {
+            errEl.textContent = String((e && e.message) || e)
+          }
+        }
+      }
+
+      const input = document.getElementById('loc')
+      document.getElementById('go').addEventListener('click', () => render(input.value.trim()))
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter') render(input.value.trim()) })
+      render('')
+    </script>
+  </body>
+</html>
