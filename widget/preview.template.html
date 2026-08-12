@@ -269,8 +269,15 @@
           config: { widgetFamily: family, runsInWidget: true, runsInApp: false },
           Script: { setWidget(w) { captured = w }, complete() {} },
         }
-        const fn = new AsyncFunction(...ARG_NAMES, WIDGET_SRC)
-        await fn(...ARG_NAMES.map((n) => shim[n]))
+        // The widget only auto-runs when NOT embedded; mark it embedded, capture
+        // its exported main() via a module shim, then await it (it no longer
+        // awaits itself at the top level).
+        globalThis.__NEBEL_EMBEDDED__ = true
+        const moduleShim = { exports: {} }
+        const fn = new AsyncFunction(...ARG_NAMES, 'module', WIDGET_SRC)
+        await fn(...ARG_NAMES.map((n) => shim[n]), moduleShim)
+        const main = moduleShim.exports
+        if (typeof main === 'function') await main()
         return captured
       }
 

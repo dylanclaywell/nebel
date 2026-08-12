@@ -388,8 +388,8 @@ async function main() {
 }
 
 // Export for the auto-updating loader (nebel-loader.js); still self-runs when
-// pasted directly or previewed.
+// pasted directly or previewed. No top-level `await` here: the loader
+// importModule()s this file into a CommonJS wrapper where top-level await is
+// illegal, so main() is fired and left to call Script.complete() itself.
 if (typeof module !== 'undefined') module.exports = main
-if (!globalThis.__NEBEL_EMBEDDED__) {
-  await main()
-}
+if (!globalThis.__NEBEL_EMBEDDED__) main()
