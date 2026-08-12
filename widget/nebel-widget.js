@@ -177,6 +177,16 @@ function hourLabel(iso) {
   return `${h}${ap}`
 }
 
+// Local device time the widget last ran — a staleness cue (iOS controls the
+// actual refresh cadence, so this shows how old the reading is).
+function nowLabel() {
+  const d = new Date()
+  let h = d.getHours()
+  const ap = h >= 12 ? 'PM' : 'AM'
+  h = h % 12 || 12
+  return `${h}:${String(d.getMinutes()).padStart(2, '0')} ${ap}`
+}
+
 // --- rendering ---
 function setGradient(widget, swatch) {
   const g = new LinearGradient()
@@ -213,6 +223,10 @@ function buildSmall(widget, d) {
   loc.textColor = text
   loc.lineLimit = 1
   top.addSpacer()
+  const upd = top.addText(d.updated)
+  upd.font = Font.systemFont(10)
+  upd.textColor = sub
+  upd.lineLimit = 1
 
   widget.addSpacer()
 
@@ -272,6 +286,10 @@ function buildMedium(widget, d) {
   const hilo = left.addText(`H:${d.hi}°  L:${d.lo}°`)
   hilo.font = Font.systemFont(11)
   hilo.textColor = sub
+  left.addSpacer(3)
+  const upd = left.addText(`Updated ${d.updated}`)
+  upd.font = Font.systemFont(10)
+  upd.textColor = sub
 
   row.addSpacer()
 
@@ -342,6 +360,7 @@ async function main() {
       hi: Math.round(raw.daily.temperature_2m_max[0]),
       lo: Math.round(raw.daily.temperature_2m_min[0]),
       hours,
+      updated: nowLabel(),
     }
 
     widget = new ListWidget()
