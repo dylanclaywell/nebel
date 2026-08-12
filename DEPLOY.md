@@ -25,23 +25,16 @@ Cloudflare Pages. Every push to `main` redeploys automatically.
 The project name you choose determines the URL: `<project-name>.pages.dev`
 (globally unique, so you may get a suffix if `nebel` is taken).
 
-## After the first deploy: set the real URL
+## Deploy URL
 
-The app ships with a `https://nebel.pages.dev` **placeholder** in a few spots. If
-your actual URL differs, replace it everywhere (all occurrences are identical):
+Live at **https://nebel-brd.pages.dev** (Cloudflare appended `-brd` because the
+bare `nebel` subdomain was taken). This URL is baked into:
 
-- `index.html` — canonical + Open Graph + Twitter tags (5 lines, incl. the `TODO`)
+- `index.html` — canonical + Open Graph + Twitter tags
 - `widget/nebel-widget.js` — `CONFIG.pwaUrl` (the widget's tap target)
 
-Find/replace `https://nebel.pages.dev` → your URL, then:
-
-```bash
-npm run build:widget   # re-embeds icons + refreshes the widget file
-git add -A && git commit -m "chore: set deploy URL" && git push
-```
-
-(If the project *is* named `nebel` and that subdomain is free, the placeholder is
-already correct — nothing to change.)
+If you move to a **custom domain**, find/replace `https://nebel-brd.pages.dev` in
+those files, then commit + push.
 
 ## Notes
 

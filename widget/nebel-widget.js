@@ -16,8 +16,8 @@
 
 const CONFIG = {
   units: { temperature: 'fahrenheit', windSpeed: 'mph', precipitation: 'inch' },
-  // TODO: replace with the real deploy URL once the PWA is live.
-  pwaUrl: 'https://nebel.pages.dev/',
+  // Where a tap on the widget opens the PWA.
+  pwaUrl: 'https://nebel-brd.pages.dev/',
   refreshMinutes: 30,
 }
 
