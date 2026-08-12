@@ -57,51 +57,60 @@ const swatch = computed(
 
 const isSaved = computed(() => props.location.type === 'saved')
 
-async function refresh() {
-  if (props.location.type === 'current') {
-    try {
-      phase.value = 'locating'
-      const { latitude, longitude } = await getCurrentPosition()
-      coords.value = { latitude, longitude }
-      phase.value = 'loading'
-      await load({ latitude, longitude })
-      loadAlerts(latitude, longitude) // fire-and-forget; never blocks the forecast
-      // Best-effort locality label; failure here shouldn't break the page.
-      try {
-        const place = await reverseGeocode(latitude, longitude)
-        locality.value = [place.name, place.admin1].filter(Boolean).join(', ')
-      } catch {
-        locality.value = ''
-      }
-    } catch (err) {
-      error.value = err.message ?? 'Could not get your location.'
-      forecast.value = null
-      loading.value = false
-    }
-    return
-  }
+// True during a pull-to-refresh (keeps the current content visible + spinner);
+// distinct from the initial `loading` which shows the full loading state.
+const refreshing = ref(false)
 
-  coords.value = {
-    latitude: props.location.latitude,
-    longitude: props.location.longitude,
+async function refresh({ pull = false } = {}) {
+  refreshing.value = pull
+  try {
+    if (props.location.type === 'current') {
+      try {
+        phase.value = 'locating'
+        const { latitude, longitude } = await getCurrentPosition()
+        coords.value = { latitude, longitude }
+        phase.value = 'loading'
+        await load({ latitude, longitude })
+        loadAlerts(latitude, longitude) // fire-and-forget; never blocks the forecast
+        // Best-effort locality label; failure here shouldn't break the page.
+        try {
+          const place = await reverseGeocode(latitude, longitude)
+          locality.value = [place.name, place.admin1].filter(Boolean).join(', ')
+        } catch {
+          locality.value = ''
+        }
+      } catch (err) {
+        error.value = err.message ?? 'Could not get your location.'
+        forecast.value = null
+        loading.value = false
+      }
+      return
+    }
+
+    coords.value = {
+      latitude: props.location.latitude,
+      longitude: props.location.longitude,
+    }
+    await load({
+      latitude: props.location.latitude,
+      longitude: props.location.longitude,
+      place: {
+        name: props.location.name,
+        admin1: props.location.admin1,
+        country: props.location.country,
+      },
+    })
+    loadAlerts(props.location.latitude, props.location.longitude)
+  } finally {
+    refreshing.value = false
   }
-  await load({
-    latitude: props.location.latitude,
-    longitude: props.location.longitude,
-    place: {
-      name: props.location.name,
-      admin1: props.location.admin1,
-      country: props.location.country,
-    },
-  })
-  loadAlerts(props.location.latitude, props.location.longitude)
 }
 
-onMounted(refresh)
+onMounted(() => refresh())
 </script>
 
 <template>
-  <WeatherScene :swatch="swatch">
+  <WeatherScene :swatch="swatch" :refreshing="refreshing" @refresh="refresh({ pull: true })">
     <div v-if="!forecast && !error" class="loading-state">
       <span class="spinner" aria-hidden="true"></span>
       <p class="loading-text">
@@ -119,11 +128,11 @@ onMounted(refresh)
         </p>
         <div class="error-actions">
           <button class="pill primary" @click="emit('add')">Add a location</button>
-          <button class="pill ghost" @click="refresh">Retry</button>
+          <button class="pill ghost" @click="refresh()">Retry</button>
         </div>
       </template>
 
-      <button v-else class="pill primary" @click="refresh">Retry</button>
+      <button v-else class="pill primary" @click="refresh()">Retry</button>
     </div>
 
     <template v-else-if="forecast">
