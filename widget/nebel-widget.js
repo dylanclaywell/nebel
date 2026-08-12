@@ -384,4 +384,9 @@ async function main() {
   Script.complete()
 }
 
-await main()
+// Export for the auto-updating loader (nebel-loader.js); still self-runs when
+// pasted directly or previewed.
+if (typeof module !== 'undefined') module.exports = main
+if (!globalThis.__NEBEL_EMBEDDED__) {
+  await main()
+}

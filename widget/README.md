@@ -5,11 +5,24 @@ Nebel PWA's condition-driven gradients. Small + Medium.
 
 ## Install
 
+### Recommended: auto-updating loader (paste once, never again)
+
 1. Install [Scriptable](https://scriptable.app) from the App Store.
-2. Open Scriptable → **+** → paste the contents of `nebel-widget.js` → name it
+2. Open Scriptable → **+** → paste the contents of **`nebel-loader.js`** → name it
    "Nebel".
-3. On the home screen, add a **Scriptable** widget (Small or Medium).
-4. Long-press it → **Edit Widget** → set **Script** to "Nebel".
+3. On the home screen, add a **Scriptable** widget (Small or Medium) → long-press
+   → **Edit Widget** → set **Script** to "Nebel".
+
+The loader downloads the widget from GitHub and caches it. On each run it makes a
+conditional request (GitHub's `ETag`): GitHub replies "not modified" when nothing
+changed, or sends the new code when it did. So after this, **updates happen
+automatically** whenever new code lands on `main` — no copy-paste, no version
+bookkeeping. (Offline, it runs the last cached copy.)
+
+### Alternative: paste the widget directly
+
+Paste **`nebel-widget.js`** instead of the loader. Simpler, but you re-paste to
+update.
 
 ## Location (widget parameter)
 
@@ -46,4 +59,8 @@ a fast iteration loop; the phone is the source of truth.
 - Units and refresh interval are in the `CONFIG` block at the top of the script.
 - Weather icons are the PWA's glass icons, pre-rasterized to PNG and embedded as
   base64 (`npm run build:widget`, via `scripts/build-widget.mjs`). SF Symbols are
-  the fallback if an icon is missing.
+  the fallback if an icon is missing. Run `build:widget` when the icons or their
+  treatment change.
+- The loader points at `dylanclaywell/nebel` on `main` (`REPO`/`BRANCH` in
+  `nebel-loader.js`). GitHub raw caches for ~5 min, so updates land shortly after
+  they're pushed — nothing else to regenerate.
